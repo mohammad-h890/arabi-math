@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>کیمیاگر کوچک: راز باغ بلورین</title>
+  <style>
+    /* ==========================================================================
+       ۱. متغیرهای طراحی و استانداردهای ارگونومیک موبایل
+       ========================================================================== */
+    :root {
+      --bg-gradient: linear-gradient(135deg, #1b263b 0%, #174244 50%, #1e453e 100%);
+      --parchment: rgba(253, 251, 247, 0.95);
+      --wood-dark: #2c3e50;
+      --emerald: #2ecc71;
+      --emerald-dark: #27ae60;
+      --violet-magic: #8e44ad;
+      --gold: #f39c12;
+      --rope-gold: #f1c40f;
+      --liquid-cyan: #00cec9;
+      --touch-target-size: 56px;
+      --font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Vazirmatn", Tahoma, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-gradient);
+      color: #333;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      touch-action: manipulation;
+    }
+
+    #game-container {
+      width: 100%;
+      max-width: 600px;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 40px rgba(0,0,0,0.6);
+    }
+
+    #fx-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* برش هوشمند آیکون‌ها */
+    .sprite-icon {
+      display: inline-block;
+      width: 38px;
+      height: 38px;
+      background-image: url('icons.png');
+      background-size: 300% 200%;
+      background-repeat: no-repeat;
+      vertical-align: middle;
+      border-radius: 10px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+      background-color: rgba(255,255,255,0.1);
+    }
+    .icon-water    { background-position: 0% 0%; }
+    .icon-flame    { background-position: 50% 0%; }
+    .icon-leaf     { background-position: 100% 0%; }
+    .icon-honey    { background-position: 0% 100%; }
+    .icon-dust     { background-position: 50% 100%; }
+    .icon-blossom  { background-position: 100% 100%; }
+
+    /* ==========================================================================
+       ۲. نوار وضعیت بالای صفحه همراه با نام دانش‌آموز
+       ========================================================================== */
+    header.status-bar {
+      min-height: 60px;
+      max-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 10px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+      z-index: 10;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .resource-badge {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--wood-dark);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      gap: 4px;
+    }
+
+    .lifetime-badge {
+      background: linear-gradient(135deg, #f1c40f 0%, #e67e22 100%);
+      color: #fff;
+    }
+
+    .player-name-tag {
+      background: rgba(46, 204, 113, 0.25);
+      border: 1px solid var(--emerald);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: bold;
+      max-width: 80px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mentor-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.22);
+      padding: 3px 8px;
+      border-radius: 18px;
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      cursor: pointer;
+      flex: 1;
+      max-width: 210px;
+      min-width: 100px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+
+    .mentor-avatar-img {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #fff url('mentor.png') center/contain no-repeat;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+    }
+
+    #mentor-bubble {
+      color: #fff;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.35;
+      white-space: normal;
+      word-break: break-word;
+      overflow-y: auto;
+      max-height: 44px;
+    }
+
+    .settings-btn-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* فضای نمایش محتوا با اسکرول نرم */
+    main.viewport {
+      flex: 1;
+      position: relative;
+      display: flex;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .view-screen {
+      width: 100%;
+      min-height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 8px;
+    }
+
+    .view-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.96);
+    }
+
+    #view-lab {
+      background: linear-gradient(180deg, rgba(20,25,35,0.72) 0%, rgba(20,25,35,0.88) 100%), 
+                  url('lab.png') center/cover no-repeat;
+      background-color: #1a252f;
+    }
+
+    #view-garden {
+      background: linear-gradient(180deg, rgba(15,30,45,0.55) 0%, rgba(15,30,45,0.85) 100%), 
+                  url('garden.png') center/cover no-repeat;
+      background-color: #173441;
+    }
+
+    /* کارت هدف معجون */
+    .recipe-card {
+      width: 100%;
+      background: var(--parchment);
+      border-radius: 16px;
+      padding: 6px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      border: 2px solid var(--gold);
+      margin-bottom: 6px;
+      flex-shrink: 0;
+    }
+
+    .target-badge {
+      background: var(--violet-magic);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    /* دیگ کیمیاگری و طناب‌ها */
+    .crucible-wrapper {
+      position: relative;
+      width: 100%;
+      height: 190px;
+      background: radial-gradient(circle, rgba(44, 62, 80, 0.88) 0%, rgba(26, 37, 47, 0.96) 100%);
+      border: 4px solid #8e9eab;
+      border-radius: 20px 20px 65px 65px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      box-shadow: inset 0 0 25px rgba(0,0,0,0.9);
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .crucible-wrapper.glow-success {
+      box-shadow: inset 0 0 35px var(--emerald), 0 0 25px var(--emerald);
+    }
+
+    .bundles-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    .rope-bundle {
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 6px 8px;
+      border: 2px dashed var(--rope-gold);
+      border-radius: 16px;
+      background: rgba(243, 156, 18, 0.15);
+      box-shadow: inset 0 0 8px rgba(241, 196, 15, 0.2);
+      animation: ropePop 0.2s ease-out;
+    }
+
+    .rope-bundle::before {
+      content: '🪢';
+      position: absolute;
+      top: -9px;
+      right: 8px;
+      font-size: 11px;
+    }
+
+    @keyframes ropePop {
+      0% { transform: scale(0.7); }
+      100% { transform: scale(1); }
+    }
+
+    .matrix-cell {
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .matrix-cell.filled {
+      background: var(--liquid-cyan);
+      box-shadow: 0 0 6px var(--liquid-cyan);
+    }
+
+    .lab-controls {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      justify-content: space-around;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .control-label {
+      color: #ecf0f1;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 30px;
+      padding: 2px;
+      border: 1.5px solid rgba(255,255,255,0.3);
+    }
+
+    .step-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(180deg, #f39c12 0%, #d35400 100%);
+      color: #fff;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-btn:active { transform: scale(0.9); }
+
+    .step-val {
+      width: 30px;
+      text-align: center;
+      color: #fff;
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    .action-dock {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .action-btn {
+      flex: 1;
+      height: 46px;
+      border-radius: 15px;
+      border: none;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .action-btn:active { transform: scale(0.95); }
+    .primary-btn { background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%); color: #fff; border-bottom: 3px solid #1e824c; }
+    .secondary-btn { background: rgba(255,255,255,0.25); color: #fff; border: 1.5px solid rgba(255,255,255,0.4); }
+
+    /* نمای باغچه در موبایل */
+    .garden-header { color: #fff; text-align: center; margin-bottom: 4px; }
+    .mastery-tree-card {
+      width: 100%; background: rgba(0, 0, 0, 0.45); border-radius: 14px; padding: 6px; border: 1.5px solid rgba(255, 255, 255, 0.2);
+      margin-bottom: 6px; flex-shrink: 0;
+    }
+    .mastery-title { color: var(--gold); font-size: 11px; font-weight: bold; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+    .mastery-nodes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+    .mastery-node { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; padding: 3px 1px; text-align: center; color: #bbb; font-size: 9.5px; }
+    .mastery-node.unlocked { background: linear-gradient(135deg, rgba(46, 204, 113, 0.6), rgba(39, 174, 96, 0.95)); border-color: var(--emerald); color: #fff; font-weight: bold; }
+    .sanctuary-plot {
+      width: 100%; height: 180px; background: rgba(0, 0, 0, 0.4); border: 2px dashed rgba(255, 255, 255, 0.35); border-radius: 20px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 6px; margin-bottom: 6px; flex-shrink: 0;
+    }
+    .sacred-plant-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .sacred-plant-img { max-width: 140px; max-height: 115px; object-fit: contain; filter: drop-shadow(0 4px 12px rgba(46,204,113,0.7)); }
+    .plant-title-tag { background: rgba(0,0,0,0.7); color: var(--gold); padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+    .garden-decorations { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+    .decor-item { font-size: 22px; }
+    .garden-shop { width: 100%; display: flex; justify-content: space-around; background: rgba(0, 0, 0, 0.45); padding: 6px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; }
+    .shop-item-btn { display: flex; flex-direction: column; align-items: center; background: rgba(255, 255, 255, 0.15); border: 1.5px solid rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 4px 8px; color: #fff; cursor: pointer; font-family: inherit; font-size: 10px; gap: 2px; }
+
+    /* ناوبری پایین صفحه (۳ دکمه‌ای شیک و منظم) */
+    nav.bottom-nav {
+      height: 62px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 32px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255,255,255,0.15);
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    .nav-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.15);
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(180deg, #f39c12 0%, #e67e22 100%);
+      border-color: #fff;
+      transform: scale(1.08);
+      box-shadow: 0 0 15px rgba(243, 156, 18, 0.5);
+    }
+
+    .teacher-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      background: #fff0f3;
+      color: #c0392b;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+      border: 1.5px solid #ff7675;
+      margin-top: 8px;
+    }
+
+    /* مدال‌ها و لایه ورود */
+    #name-login-overlay, #settings-modal, #stealth-modal {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+      padding: 15px;
+    }
+
+    .modal-box {
+      background: var(--parchment);
+      padding: 18px;
+      border-radius: 22px;
+      border: 3px solid var(--gold);
+      text-align: center;
+      width: 100%;
+      max-width: 320px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+
+    .name-input-field {
+      width: 100%;
+      height: 44px;
+      border-radius: 14px;
+      border: 2px solid var(--gold);
+      padding: 0 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      outline: none;
+      margin: 10px 0;
+    }
+
+    .table-chips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0; }
+    .table-chip-btn { height: 38px; border-radius: 12px; border: 1.5px solid #ccc; background: #f1f2f6; font-size: 12px; font-weight: bold; cursor: pointer; }
+    .table-chip-btn.active { background: var(--emerald); border-color: #27ae60; color: #fff; }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <canvas id="fx-canvas"></canvas>
+
+    <!-- لایه ورود نام دانش‌آموز (فقط در اولین ورود دستگاه) -->
+    <div id="name-login-overlay">
+      <div class="modal-box">
+        <div style="width: 75px; height: 75px; background: url('mentor.png') center/contain no-repeat; margin: 0 auto 6px auto;"></div>
+        <h3 style="color: var(--wood-dark); font-size: 17px; margin-bottom: 4px;">به باغ بلورین خوش آمدی! 🦉</h3>
+        <p style="font-size: 12px; color: #555;">کیمیاگر باهوش، لطفاً نام خودت را بنویس:</p>
+        
+        <input type="text" id="input-student-name" class="name-input-field" placeholder="نام و نام خانوادگی..." maxlength="25">
+        
+        <button id="btn-submit-name" class="action-btn primary-btn" style="height: 44px; width: 100%;">
+          شروع ماجراجویی 🚀
+        </button>
+
+        <div class="teacher-badge">طراحی شده با ❤️ توسط معلمت آقای عربی</div>
+      </div>
+    </div>
+
+    <!-- پنجره تنظیمات جدول‌های ضرب -->
+    <div id="settings-modal" style="display: none;">
+      <div class="modal-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 6px;">
+          <h3 style="font-size: 15px; color: var(--wood-dark);">⚙️ تنظیم جدول‌های ضرب</h3>
+          <button id="btn-close-settings" style="border:none; background:none; font-size: 18px; cursor:pointer;">✕</button>
+        </div>
+        
+        <p style="font-size: 11px; color: #666; text-align: right; margin-top: 8px;">جدول‌های فعال ضرب را انتخاب کن:</p>
+        <div class="table-chips-grid" id="table-chips-container"></div>
+        
+        <div style="display: flex; gap: 6px;">
+          <button id="btn-select-all-tables" class="action-btn secondary-btn" style="height: 36px; font-size: 11px; color:#333; background:#eee;">انتخاب همه</button>
+          <button id="btn-save-settings" class="action-btn primary-btn" style="height: 36px; font-size: 11px;">ذخیره تنظیمات ✅</button>
+        </div>
+        
+        <div class="teacher-badge" style="font-size: 11px; margin-top: 8px;">طراحی شده با ❤️ توسط معلمت آقای عربی</div>
+        
+        <button id="btn-reset-game" style="width:100%; margin-top:8px; background:#ffeaa7; color:#d63031; border:1px dashed #d63031; border-radius:10px; padding:6px; font-size:11px; font-weight:bold; cursor:pointer;">
+          🔄 تغییر نام یا شروع مجدد بازی
+        </button>
+      </div>
+    </div>
+
+    <!-- مدال تحلیل شناختی معلم -->
+    <div id="stealth-modal" style="display: none;">
+      <div class="modal-box" style="text-align: right;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="font-size: 14px; color: var(--wood-dark);">📊 گزارش شناختی دانش‌آموز</h3>
+          <button id="btn-close-modal" style="border:none; background:none; font-size: 18px; cursor:pointer;">✕</button>
+        </div>
+        <div id="telemetry-stats" style="font-size: 12px; line-height: 1.8; color: #444;"></div>
+      </div>
+    </div>
+
+    <!-- نوار وضعیت بالای صفحه -->
+    <header class="status-bar">
+      <div class="status-left">
+        <div class="resource-badge">
+          <span class="sprite-icon icon-dust" style="width: 18px; height: 18px;"></span>
+          <span id="txt-glow-dust">۰</span>
+        </div>
+        <div class="resource-badge lifetime-badge">
+          <span>🏆</span>
+          <span id="txt-lifetime-dust">۰</span>
+        </div>
+        <span class="player-name-tag" id="header-player-name">کیمیاگر</span>
+      </div>
+
+      <div class="mentor-container" id="mentor-status">
+        <div class="mentor-avatar-img"></div>
+        <span id="mentor-bubble">بریم معجون بسازیم!</span>
+      </div>
+
+      <button class="settings-btn-icon" id="btn-open-settings">⚙️</button>
+    </header>
+
+    <!-- محتوای اصلی ۲ نما: آزمایشگاه و باغچه -->
+    <main class="viewport">
+      <!-- ۱. نمای آزمایشگاه -->
+      <section id="view-lab" class="view-screen">
+        <div class="recipe-card">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div id="recipe-sprite-tag" class="sprite-icon icon-water"></div>
+            <span id="recipe-title" style="font-weight: bold; font-size: 15px;">عصاره شبنم</span>
+          </div>
+          <div class="recipe-goal">
+            <span>انرژی: </span>
+            <span id="target-product-badge" class="target-badge">۶ واحد</span>
+          </div>
+        </div>
+
+        <div class="crucible-wrapper" id="crucible-fx-box">
+          <div id="crucible-bundles" class="bundles-container"></div>
+        </div>
+
+        <div class="lab-controls">
+          <div class="control-group">
+            <label class="control-label">تعداد طناب‌ها:</label>
+            <div class="stepper">
+              <button class="step-btn" id="btn-dec-rows">−</button>
+              <span class="step-val" id="val-rows">۰</span>
+              <button class="step-btn" id="btn-inc-rows">+</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">قطرات در هر طناب:</label>
+            <div class="stepper">
+              <button class="step-btn" id="btn-dec-cols">−</button>
+              <span class="step-val" id="val-cols">۰</span>
+              <button class="step-btn" id="btn-inc-cols">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-dock">
+          <button id="btn-rotate-matrix" class="action-btn secondary-btn">🔄 چرخش دیگ</button>
+          <button id="btn-transmute" class="action-btn primary-btn">✨ تبلور جادویی</button>
+        </div>
+      </section>
+
+      <!-- ۲. نمای باغچه -->
+      <section id="view-garden" class="view-screen view-hidden">
+        <div class="garden-header">
+          <h2 style="font-size: 15px;">باغچه و زیست‌بوم جادویی</h2>
+        </div>
+
+        <div class="mastery-tree-card">
+          <div class="mastery-title">
+            <span>🌳</span>
+            <span>درخت تسلط بر جدول‌های فعال:</span>
+          </div>
+          <div class="mastery-nodes" id="mastery-grid">
+            <div class="mastery-node" id="node-2">جدول ۲</div>
+            <div class="mastery-node" id="node-3">جدول ۳</div>
+            <div class="mastery-node" id="node-4">جدول ۴</div>
+            <div class="mastery-node" id="node-5">جدول ۵</div>
+            <div class="mastery-node" id="node-6">جدول ۶</div>
+            <div class="mastery-node" id="node-7">جدول ۷</div>
+            <div class="mastery-node" id="node-8">جدول ۸</div>
+            <div class="mastery-node" id="node-9">جدول ۹</div>
+            <div class="mastery-node" id="node-10">جدول ۱۰</div>
+          </div>
+        </div>
+
+        <div class="sanctuary-plot" id="sanctuary-biome">
+          <div class="sacred-plant-wrapper">
+            <img id="sacred-plant-img" class="sacred-plant-img" src="plant1.png" alt="گیاه حیات" onerror="this.style.display='none'; document.getElementById('plant-fallback').style.display='block';">
+            <div id="plant-fallback" style="font-size: 45px; display: none;">🌱</div>
+            <span class="plant-title-tag" id="plant-stage-title">جوانه شبنم بلورین</span>
+          </div>
+          <div class="garden-decorations" id="garden-decor-list"></div>
+        </div>
+
+        <div class="garden-shop">
+          <button class="shop-item-btn" id="btn-buy-flower">
+            <span class="sprite-icon icon-blossom" style="width: 24px; height: 24px;"></span>
+            <span>گل (۲۰)</span>
+          </button>
+          <button class="shop-item-btn" id="btn-buy-butterfly">
+            <span class="sprite-icon icon-honey" style="width: 24px; height: 24px;"></span>
+            <span>پروانه (۴۵)</span>
+          </button>
+          <button class="shop-item-btn" id="btn-buy-fountain">
+            <span class="sprite-icon icon-water" style="width: 24px; height: 24px;"></span>
+            <span>آبنما (۹۰)</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- نوار ناوبری پایین (۳ دکمه‌ای منظم) -->
+    <nav class="bottom-nav">
+      <button id="btn-tab-lab" class="nav-btn active" title="آزمایشگاه">⚗️</button>
+      <button id="btn-tab-garden" class="nav-btn" title="باغچه">🌿</button>
+      <button id="btn-sound-toggle" class="nav-btn" title="صدا">🔊</button>
+    </nav>
+  </div>
+
+  <script>
+    const SAVE_STORAGE_KEY = "ALCHEMIST_GROVE_SAVE_FINAL";
+    const GameConfig = { SOUND_ENABLED: true, SCAFFOLD_THRESHOLD: 2, TAP_DEBOUNCE_MS: 160, MASTERY_GOAL_PER_TABLE: 3 };
+
+    let lastTapTime = 0;
+    function allowAction() {
+      const now = Date.now();
+      if (now - lastTapTime < GameConfig.TAP_DEBOUNCE_MS) return false;
+      lastTapTime = now;
+      return true;
+    }
+
+    const GameState = {
+      playerName: "",
+      resources: { glowDust: 0, lifetimeDust: 0, plantStage: 1, plantXP: 0, gardenItems: [] },
+      activeTables: new Set([2, 3, 4, 5, 6, 7, 8, 9, 10]),
+      problemDeck: [],
+      currentRecipe: null,
+      crucible: { rows: 0, cols: 0 },
+      stealthTelemetry: {
+        consecutiveErrors: 0,
+        additionConfusionCount: 0,
+        commutativityUsed: 0,
+        totalTransmutes: 0,
+        recipeStartTime: Date.now(),
+        latencies: [],
+        masteryByTable: { 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 }
+      }
+    };
+
+    function saveGameToStorage() {
+      try {
+        const payload = {
+          playerName: GameState.playerName,
+          resources: GameState.resources,
+          activeTables: Array.from(GameState.activeTables),
+          stealthTelemetry: GameState.stealthTelemetry
+        };
+        localStorage.setItem(SAVE_STORAGE_KEY, JSON.stringify(payload));
+      } catch (e) {}
+    }
+
+    function loadGameFromStorage() {
+      try {
+        const raw = localStorage.getItem(SAVE_STORAGE_KEY);
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        if (data && data.playerName) {
+          GameState.playerName = data.playerName;
+          GameState.resources = data.resources || GameState.resources;
+          if (data.activeTables) GameState.activeTables = new Set(data.activeTables);
+          if (data.stealthTelemetry) GameState.stealthTelemetry = data.stealthTelemetry;
+          return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    const ElementMeta = {
+      water:   { name: "عصاره شبنم بلورین", spriteClass: "icon-water", color: "#00cec9" },
+      flame:   { name: "بلور شعله اژدها", spriteClass: "icon-flame", color: "#ff7675" },
+      leaf:    { name: "اکسیر برگ کهنسال", spriteClass: "icon-leaf", color: "#2ecc71" },
+      honey:   { name: "شهد طلایی خورشید", spriteClass: "icon-honey", color: "#f39c12" },
+      dust:    { name: "گرده درخشان مهتاب", spriteClass: "icon-dust", color: "#a29bfe" },
+      blossom: { name: "عصاره شکوفه جادو", spriteClass: "icon-blossom", color: "#fd79a8" }
+    };
+
+    function rebuildProblemDeck() {
+      GameState.problemDeck = [];
+      const keys = Object.keys(ElementMeta);
+      GameState.activeTables.forEach(t => {
+        for (let m = 1; m <= 10; m++) {
+          if (!GameState.activeTables.has(m) && GameState.activeTables.size < 9) continue;
+          const chosen = ElementMeta[keys[(t + m) % keys.length]];
+          GameState.problemDeck.push({
+            table: t, factorA: t, factorB: m, product: t * m,
+            name: chosen.name, spriteClass: chosen.spriteClass, color: chosen.color
+          });
+        }
+      });
+      if (GameState.problemDeck.length === 0) {
+        GameState.activeTables.forEach(t => {
+          for (let m = 1; m <= 10; m++) {
+            const chosen = ElementMeta[keys[(t + m) % keys.length]];
+            GameState.problemDeck.push({
+              table: t, factorA: t, factorB: m, product: t * m,
+              name: chosen.name, spriteClass: chosen.spriteClass, color: chosen.color
+            });
+          }
+        });
+      }
+      for (let i = GameState.problemDeck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [GameState.problemDeck[i], GameState.problemDeck[j]] = [GameState.problemDeck[j], GameState.problemDeck[i]];
+      }
+    }
+
+    function getNextRandomRecipe() {
+      if (GameState.problemDeck.length === 0) rebuildProblemDeck();
+      return GameState.problemDeck.pop();
+    }
+
+    /* موتور ذرات */
+    const canvas = document.getElementById('fx-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor(x, y, color) {
+        this.x = x; this.y = y; this.color = color;
+        this.size = Math.random() * 6 + 3;
+        this.speedX = (Math.random() - 0.5) * 8;
+        this.speedY = (Math.random() - 0.5) * 8 - 2;
+        this.gravity = 0.15; this.alpha = 1; this.decay = 0.02;
+      }
+      update() { this.x += this.speedX; this.y += this.speedY; this.speedY += this.gravity; this.alpha -= this.decay; }
+      draw() {
+        ctx.save(); ctx.globalAlpha = Math.max(0, this.alpha);
+        ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill(); ctx.restore();
+      }
+    }
+    function spawnParticles(x, y, color) { for (let i = 0; i < 40; i++) particles.push(new Particle(x, y, color)); }
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p, i) => { p.update(); p.draw(); if (p.alpha <= 0) particles.splice(i, 1); });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    /* موتور صوتی Web Audio */
+    class SoundEngine {
+      constructor() { this.ctx = null; }
+      init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+      playBubble() {
+        if (!GameConfig.SOUND_ENABLED) return; this.init();
+        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+        osc.type = 'sine'; const now = this.ctx.currentTime;
+        osc.frequency.setValueAtTime(330, now); osc.frequency.exponentialRampToValueAtTime(780, now + 0.1);
+        gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(now); osc.stop(now + 0.1);
+      }
+      playSuccess() {
+        if (!GameConfig.SOUND_ENABLED) return; this.init();
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+          osc.type = 'triangle'; const t = this.ctx.currentTime + (idx * 0.06);
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.25, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(t); osc.stop(t + 0.4);
+        });
+      }
+      playMismatch() {
+        if (!GameConfig.SOUND_ENABLED) return; this.init();
+        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+        osc.type = 'sine'; const now = this.ctx.currentTime;
+        osc.frequency.setValueAtTime(240, now); osc.frequency.linearRampToValueAtTime(170, now + 0.2);
+        gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(now); osc.stop(now + 0.2);
+      }
+    }
+    const AudioFX = new SoundEngine();
+
+    function evaluateStealthAndDDA(isCorrect, rows, cols) {
+      const target = GameState.currentRecipe.product;
+      const current = rows * cols;
+      const mentor = document.getElementById('mentor-bubble');
+      const box = document.getElementById('crucible-fx-box');
+
+      if (isCorrect) {
+        GameState.resources.glowDust += 10;
+        GameState.resources.lifetimeDust += 10;
+        GameState.stealthTelemetry.consecutiveErrors = 0;
+        GameState.stealthTelemetry.totalTransmutes++;
+
+        const t = GameState.currentRecipe.table;
+        GameState.stealthTelemetry.masteryByTable[t] = (GameState.stealthTelemetry.masteryByTable[t] || 0) + 1;
+        updateMasteryTreeUI();
+
+        mentor.textContent = `آفرین ${GameState.playerName}! معجون درخشید! ✨`;
+        AudioFX.playSuccess();
+        box.classList.add('glow-success');
+        const rect = box.getBoundingClientRect();
+        spawnParticles(rect.left + rect.width/2, rect.top + rect.height/2, GameState.currentRecipe.color);
+
+        saveGameToStorage();
+
+        setTimeout(() => {
+          box.classList.remove('glow-success');
+          initCurrentRecipe();
+        }, 1100);
+      } else {
+        GameState.stealthTelemetry.consecutiveErrors++;
+        AudioFX.playMismatch();
+
+        if (rows + cols === target) {
+          GameState.stealthTelemetry.additionConfusionCount++;
+          mentor.textContent = `دقت کن: تو ${rows} را با ${cols} جمع کردی! ما ضرب می‌خواهیم.`;
+        } else if (GameState.stealthTelemetry.consecutiveErrors >= GameConfig.SCAFFOLD_THRESHOLD) {
+          mentor.textContent = `راهنمایی: فکر کن چه طناب‌هایی به عدد ${target} می‌رسند؟`;
+        } else if (current < target) {
+          mentor.textContent = "انرژی کل کمتر از هدف است، طناب‌ها یا قطرات را بیشتر کن!";
+        } else {
+          mentor.textContent = "انرژی سرریز شد! طناب‌ها یا قطرات را کمتر کن.";
+        }
+      }
+      updateStatusBadges();
+      saveGameToStorage();
+    }
+
+    function updateStatusBadges() {
+      document.getElementById('txt-glow-dust').textContent = GameState.resources.glowDust;
+      document.getElementById('txt-lifetime-dust').textContent = GameState.resources.lifetimeDust;
+      document.getElementById('header-player-name').textContent = GameState.playerName || "کیمیاگر";
+    }
+
+    function updateMasteryTreeUI() {
+      for (let i = 2; i <= 10; i++) {
+        const count = GameState.stealthTelemetry.masteryByTable[i] || 0;
+        const node = document.getElementById(`node-${i}`);
+        if (node) {
+          if (!GameState.activeTables.has(i)) {
+            node.style.opacity = '0.35';
+            node.textContent = `جدول ${i} (خاموش)`;
+          } else {
+            node.style.opacity = '1';
+            node.textContent = `جدول ${i} (${count}/${GameConfig.MASTERY_GOAL_PER_TABLE})`;
+            if (count >= GameConfig.MASTERY_GOAL_PER_TABLE) {
+              node.classList.add('unlocked');
+              node.textContent = `جدول ${i} 🌟`;
+            }
+          }
+        }
+      }
+    }
+
+    const PlantStages = [
+      { stage: 1, title: "جوانه شبنم بلورین", img: "plant1.png" },
+      { stage: 2, title: "نهال غنچه‌های نور", img: "plant2.png" },
+      { stage: 3, title: "درختچه شکوفه‌های جادویی", img: "plant3.png" },
+      { stage: 4, title: "درخت بارور گوهرها", img: "plant4.png" },
+      { stage: 5, title: "درخت باستانی کیهان", img: "plant5.png" }
+    ];
+
+    function checkPlantGrowth() {
+      const xp = GameState.resources.plantXP;
+      let newStage = 1;
+      if (xp >= 150) newStage = 5;
+      else if (xp >= 90) newStage = 4;
+      else if (xp >= 50) newStage = 3;
+      else if (xp >= 20) newStage = 2;
+
+      if (newStage !== GameState.resources.plantStage) {
+        GameState.resources.plantStage = newStage;
+        AudioFX.playSuccess();
+        document.getElementById('mentor-bubble').textContent = "گیاه حیات با هوش تو تکامل یافت! 🌟";
+      }
+      renderPlant();
+      saveGameToStorage();
+    }
+
+    function renderPlant() {
+      const stageData = PlantStages[GameState.resources.plantStage - 1];
+      const img = document.getElementById('sacred-plant-img');
+      img.src = stageData.img;
+      img.style.display = 'block';
+      document.getElementById('plant-fallback').style.display = 'none';
+      document.getElementById('plant-stage-title').textContent = stageData.title;
+
+      const list = document.getElementById('garden-decor-list');
+      list.innerHTML = '';
+      GameState.resources.gardenItems.forEach(item => {
+        const span = document.createElement('span');
+        span.className = 'decor-item';
+        span.textContent = item;
+        list.appendChild(span);
+      });
+    }
+
+    function setupGardenShop() {
+      const shopItems = [
+        { btnId: 'btn-buy-flower', cost: 20, xp: 10, symbol: '🌸' },
+        { btnId: 'btn-buy-butterfly', cost: 45, xp: 25, symbol: '🦋' },
+        { btnId: 'btn-buy-fountain', cost: 90, xp: 50, symbol: '⛲' }
+      ];
+
+      shopItems.forEach(item => {
+        document.getElementById(item.btnId).addEventListener('click', () => {
+          if (!allowAction()) return;
+          if (GameState.resources.glowDust >= item.cost) {
+            GameState.resources.glowDust -= item.cost;
+            GameState.resources.plantXP += item.xp;
+            GameState.resources.gardenItems.push(item.symbol);
+            AudioFX.playSuccess();
+            checkPlantGrowth();
+            updateStatusBadges();
+            saveGameToStorage();
+          } else {
+            AudioFX.playMismatch();
+            document.getElementById('mentor-bubble').textContent = "گرده‌های موجود کافی نیست!";
+          }
+        });
+      });
+    }
+
+    function initCurrentRecipe() {
+      GameState.currentRecipe = getNextRandomRecipe();
+      document.getElementById('recipe-title').textContent = GameState.currentRecipe.name;
+      document.getElementById('recipe-sprite-tag').className = `sprite-icon ${GameState.currentRecipe.spriteClass}`;
+      document.getElementById('target-product-badge').textContent = `${GameState.currentRecipe.product} واحد`;
+      GameState.crucible.rows = 0;
+      GameState.crucible.cols = 0;
+      updateLabUI();
+      updateStatusBadges();
+    }
+
+    function updateLabUI() {
+      const rows = GameState.crucible.rows;
+      const cols = GameState.crucible.cols;
+      document.getElementById('val-rows').textContent = rows;
+      document.getElementById('val-cols').textContent = cols;
+
+      const container = document.getElementById('crucible-bundles');
+      container.innerHTML = '';
+
+      if (rows > 0 && cols > 0) {
+        let dropSize = 18;
+        if (cols > 5 || rows > 5) dropSize = 14;
+        if (cols > 7 || rows > 7) dropSize = 11;
+
+        for (let r = 0; r < rows; r++) {
+          const bundle = document.createElement('div');
+          bundle.className = 'rope-bundle';
+          for (let c = 0; c < cols; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'matrix-cell filled';
+            cell.style.width = `${dropSize}px`;
+            cell.style.height = `${dropSize}px`;
+            bundle.appendChild(cell);
+          }
+          container.appendChild(bundle);
+        }
+      }
+    }
+
+    function rotateCrucibleMatrix() {
+      if (!allowAction()) return;
+      if (GameState.crucible.rows === 0 || GameState.crucible.cols === 0) return;
+      AudioFX.playBubble();
+      GameState.stealthTelemetry.commutativityUsed++;
+      const temp = GameState.crucible.rows;
+      GameState.crucible.rows = GameState.crucible.cols;
+      GameState.crucible.cols = temp;
+      updateLabUI();
+    }
+
+    function renderSettingsChips() {
+      const container = document.getElementById('table-chips-container');
+      container.innerHTML = '';
+      for (let num = 2; num <= 10; num++) {
+        const btn = document.createElement('button');
+        const isActive = GameState.activeTables.has(num);
+        btn.className = `table-chip-btn ${isActive ? 'active' : ''}`;
+        btn.textContent = `جدول ${num}`;
+        btn.addEventListener('click', () => {
+          if (GameState.activeTables.has(num)) {
+            if (GameState.activeTables.size <= 1) return alert("حداقل یک جدول باید فعال باشد!");
+            GameState.activeTables.delete(num);
+          } else {
+            GameState.activeTables.add(num);
+          }
+          AudioFX.playBubble();
+          renderSettingsChips();
+        });
+        container.appendChild(btn);
+      }
+    }
+
+    function setupEventListeners() {
+      const btnLab = document.getElementById('btn-tab-lab');
+      const btnGarden = document.getElementById('btn-tab-garden');
+      const viewLab = document.getElementById('view-lab');
+      const viewGarden = document.getElementById('view-garden');
+
+      btnLab.addEventListener('click', () => {
+        btnLab.classList.add('active'); btnGarden.classList.remove('active');
+        viewLab.classList.remove('view-hidden'); viewGarden.classList.add('view-hidden');
+        AudioFX.playBubble();
+      });
+
+      btnGarden.addEventListener('click', () => {
+        btnGarden.classList.add('active'); btnLab.classList.remove('active');
+        viewGarden.classList.remove('view-hidden'); viewLab.classList.add('view-hidden');
+        AudioFX.playBubble();
+      });
+
+      document.getElementById('btn-sound-toggle').addEventListener('click', (e) => {
+        GameConfig.SOUND_ENABLED = !GameConfig.SOUND_ENABLED;
+        e.target.textContent = GameConfig.SOUND_ENABLED ? '🔊' : '🔇';
+      });
+
+      // دکمه ثبت نام
+      document.getElementById('btn-submit-name').addEventListener('click', () => {
+        const input = document.getElementById('input-student-name');
+        const nameVal = input.value.trim();
+        if (nameVal.length < 2) {
+          alert("لطفاً نام خود را وارد کن!");
+          return;
+        }
+        GameState.playerName = nameVal;
+        document.getElementById('name-login-overlay').style.display = 'none';
+        document.getElementById('mentor-bubble').textContent = `سلام ${GameState.playerName} عزیز! آماده‌ای؟ 🦉✨`;
+        updateStatusBadges();
+        saveGameToStorage();
+        AudioFX.playSuccess();
+      });
+
+      // استپرها
+      document.getElementById('btn-inc-rows').addEventListener('click', () => {
+        if (GameState.crucible.rows < 10) { GameState.crucible.rows++; AudioFX.playBubble(); updateLabUI(); }
+      });
+      document.getElementById('btn-dec-rows').addEventListener('click', () => {
+        if (GameState.crucible.rows > 0) { GameState.crucible.rows--; AudioFX.playBubble(); updateLabUI(); }
+      });
+      document.getElementById('btn-inc-cols').addEventListener('click', () => {
+        if (GameState.crucible.cols < 10) { GameState.crucible.cols++; AudioFX.playBubble(); updateLabUI(); }
+      });
+      document.getElementById('btn-dec-cols').addEventListener('click', () => {
+        if (GameState.crucible.cols > 0) { GameState.crucible.cols--; AudioFX.playBubble(); updateLabUI(); }
+      });
+
+      document.getElementById('btn-rotate-matrix').addEventListener('click', rotateCrucibleMatrix);
+      document.getElementById('btn-transmute').addEventListener('click', () => {
+        if (!allowAction()) return;
+        const total = GameState.crucible.rows * GameState.crucible.cols;
+        evaluateStealthAndDDA(total === GameState.currentRecipe.product && total > 0, GameState.crucible.rows, GameState.crucible.cols);
+      });
+
+      // تنظیمات
+      const setModal = document.getElementById('settings-modal');
+
+      document.getElementById('btn-open-settings').addEventListener('click', () => {
+        renderSettingsChips();
+        setModal.style.display = 'flex';
+        AudioFX.playBubble();
+      });
+
+      const closeSet = () => {
+        setModal.style.display = 'none';
+        rebuildProblemDeck(); initCurrentRecipe(); updateMasteryTreeUI(); saveGameToStorage();
+      };
+
+      document.getElementById('btn-close-settings').addEventListener('click', closeSet);
+      document.getElementById('btn-save-settings').addEventListener('click', closeSet);
+
+      document.getElementById('btn-select-all-tables').addEventListener('click', () => {
+        for (let i = 2; i <= 10; i++) GameState.activeTables.add(i);
+        renderSettingsChips(); AudioFX.playBubble();
+      });
+
+      document.getElementById('btn-reset-game').addEventListener('click', () => {
+        if (confirm("آیا مطمئنی می‌خواهی نام کاربری یا پیشرفت را بازنشانی کنی؟")) {
+          localStorage.removeItem(SAVE_STORAGE_KEY); location.reload();
+        }
+      });
+
+      // مدال معلم
+      const stealthModal = document.getElementById('stealth-modal');
+      document.getElementById('mentor-status').addEventListener('click', () => {
+        const stats = document.getElementById('telemetry-stats');
+        stats.innerHTML = `
+          <p>👤 <b>دانش‌آموز:</b> ${GameState.playerName}</p>
+          <p>✨ <b>کل معجون‌های موفق:</b> ${GameState.stealthTelemetry.totalTransmutes}</p>
+          <p>🏆 <b>کل گرده‌های تاریخچه:</b> ${GameState.resources.lifetimeDust}</p>
+          <p>🌱 <b>مرحله رشد گیاه:</b> ${GameState.resources.plantStage} از ۵</p>
+          <p>⚠️ <b>خطای جمع به جای ضرب:</b> ${GameState.stealthTelemetry.additionConfusionCount}</p>
+        `;
+        stealthModal.style.display = 'flex';
+      });
+      document.getElementById('btn-close-modal').addEventListener('click', () => stealthModal.style.display = 'none');
+    }
+
+    window.addEventListener('load', () => {
+      const hasSave = loadGameFromStorage();
+      rebuildProblemDeck();
+      initCurrentRecipe();
+      setupEventListeners();
+      setupGardenShop();
+      renderPlant();
+      updateMasteryTreeUI();
+      updateStatusBadges();
+
+      if (hasSave && GameState.playerName) {
+        document.getElementById('name-login-overlay').style.display = 'none';
+        document.getElementById('mentor-bubble').textContent = `خوش برگشتی ${GameState.playerName} عزیز! 🦉✨`;
+      }
+    });
+  </script>
+</body>
+</html>
